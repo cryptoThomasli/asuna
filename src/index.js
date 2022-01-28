@@ -3,10 +3,10 @@ const ABI = require('./constants/abi.json');
 
 const PUBLIC_KEY = "0x5AaF4dD22e2997f60c4B28f6c6736Fe506474642";
 const PRIVATE_KEY = "";
-const GAS = 10;
-const MAX_PRIORITY_FEE_PER_GAS = 10000;
-const MINT_COUNT = 1;
+const GAS = 500000;
+const MAX_PRIORITY_FEE_PER_GAS = 1999999987;
 const CRON_JOB_INTERVAL_IN_MS = 1000;
+const PRICE_PER_NFT = 0.08;
 
 // Mainnet
 // const rpcUrl = "https://mainnet.infura.io/v3/4c3b9d39ccc449a38cd19ea316eb3116";
@@ -18,6 +18,7 @@ const contractAddress = "0x36eCEabAA19E023586A1C28e45e8Dd98E8352b82";
 
 const web3 = new Web3(rpcUrl);
 const contract = new web3.eth.Contract(ABI, contractAddress);
+let mintCount = 1;
 
 const main = async() => {
   const nonce = await getNonce();
@@ -27,10 +28,11 @@ const main = async() => {
       const publicListMaxMint = await getPublicListMaxMint();
       console.log(publicListMaxMint);
       if (publicListMaxMint > 0) {
+        // mintCount = publicListMaxMint; TODO：
         console.log("Mint start!");
 
-        const tx = getTx(nonce);
-        console.log(tx);
+        await mintPublic(nonce);
+        break;
       }
     } catch (e) {
       console.log(e);
@@ -39,6 +41,17 @@ const main = async() => {
     }
   }
 };
+
+const mintPublic = async (nonce) => {
+  const tx = getTx(nonce);
+  console.log({tx});
+  const signedTx = await web3.eth.accounts.signTransaction(tx, PRIVATE_KEY);
+  console.log({signedTx});
+  const createReceipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+  console.log(
+    `Transaction successful with hash: ${createReceipt.transactionHash}`
+  );
+}
 
 const getPublicListMaxMint = async () => {
   return contractCall("publicListMaxMint", []);
@@ -56,9 +69,10 @@ const getTx = (nonce) => ({
   'from': PUBLIC_KEY,
   'to': contractAddress,
   'nonce': nonce,
+  'value': web3.utils.toWei((mintCount * PRICE_PER_NFT).toString(), 'ether'),
   'gas': GAS,
   'maxPriorityFeePerGas': MAX_PRIORITY_FEE_PER_GAS,
-  'data': encodeMintPublicData(MINT_COUNT)
+  'data': encodeMintPublicData(mintCount)
 })
 
 const contractCall = async (methodName, params) => {

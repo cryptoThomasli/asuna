@@ -44,9 +44,7 @@ const main = async() => {
 
 const mintPublic = async (nonce) => {
   const tx = getTx(nonce);
-  console.log({tx});
   const signedTx = await web3.eth.accounts.signTransaction(tx, PRIVATE_KEY);
-  console.log({signedTx});
   const createReceipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
   console.log(
     `Transaction successful with hash: ${createReceipt.transactionHash}`

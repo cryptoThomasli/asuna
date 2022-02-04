@@ -1,20 +1,20 @@
 const Web3 = require('web3');
-const ABI = require('./constants/abi.json');
+const ABI = require('./constants/apezuki.json');
 
 const PUBLIC_KEY = "0x5AaF4dD22e2997f60c4B28f6c6736Fe506474642";
 const PRIVATE_KEY = "";
 const GAS = 500000;
 const MAX_PRIORITY_FEE_PER_GAS = 1999999987;
 const CRON_JOB_INTERVAL_IN_MS = 1000;
-const PRICE_PER_NFT = 0.08;
+const PRICE_PER_NFT = 0;
 
 // Mainnet
 // const rpcUrl = "https://mainnet.infura.io/v3/4c3b9d39ccc449a38cd19ea316eb3116";
-// const contractAddress = "0xAf615B61448691fC3E4c61AE4F015d6e77b6CCa8";
+// const contractAddress = "0x31c67B007f3951F0cfcE119680Fb41a22381d5Ae";
 
 // Rinkeby
 const rpcUrl = "https://rinkeby.infura.io/v3/4c3b9d39ccc449a38cd19ea316eb3116";
-const contractAddress = "0x36eCEabAA19E023586A1C28e45e8Dd98E8352b82";
+const contractAddress = "0xF615d3a70e785629CCBb3C26E8B811A78b541265";
 
 const web3 = new Web3(rpcUrl);
 const contract = new web3.eth.Contract(ABI, contractAddress);
@@ -25,13 +25,13 @@ const main = async() => {
 
   for (;;) {
     try {
-      const publicListMaxMint = await getPublicListMaxMint();
-      console.log(publicListMaxMint);
-      if (publicListMaxMint > 0) {
+      const totalSupply = await getTotalSupply();
+      console.log(totalSupply);
+      if (totalSupply > 0) {
         // mintCount = publicListMaxMint; TODO：
         console.log("Mint start!");
 
-        await mintPublic(nonce);
+        await mint(nonce);
         break;
       }
     } catch (e) {
@@ -41,8 +41,8 @@ const main = async() => {
     }
   }
 };
-
-const mintPublic = async (nonce) => {
+// ==== Custom functions start ==== //
+const mint = async (nonce) => {
   const tx = getTx(nonce);
   const signedTx = await web3.eth.accounts.signTransaction(tx, PRIVATE_KEY);
   const createReceipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
@@ -51,17 +51,18 @@ const mintPublic = async (nonce) => {
   );
 }
 
-const getPublicListMaxMint = async () => {
-  return contractCall("publicListMaxMint", []);
+const getTotalSupply = async () => {
+  return contractCall("totalSupply", []);
 }
 
 const getNonce = async () => {
   return await web3.eth.getTransactionCount(PUBLIC_KEY, 'latest');
 }
 
-const encodeMintPublicData = (count) => {
-  return encodeContractCall("mintPublic", [count]);
+const encodeData = (count) => {
+  return encodeContractCall("adoptApes", [count]);
 }
+// ==== Custom functions end ==== //
 
 const getTx = (nonce) => ({
   'from': PUBLIC_KEY,
@@ -70,7 +71,7 @@ const getTx = (nonce) => ({
   'value': web3.utils.toWei((mintCount * PRICE_PER_NFT).toString(), 'ether'),
   'gas': GAS,
   'maxPriorityFeePerGas': MAX_PRIORITY_FEE_PER_GAS,
-  'data': encodeMintPublicData(mintCount)
+  'data': encodeData(mintCount)
 })
 
 const contractCall = async (methodName, params) => {

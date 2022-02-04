@@ -1,9 +1,9 @@
 const Web3 = require('web3');
 const ABI = require('./constants/apezuki.json');
 
-const PUBLIC_KEY = "0x5AaF4dD22e2997f60c4B28f6c6736Fe506474642";
+const PUBLIC_KEY = "0xB1b2B6508e7f55dccF60762e35bd96f5C7325c09";
 const PRIVATE_KEY = "";
-const GAS = 500000;
+const GAS = 200000;
 const MAX_PRIORITY_FEE_PER_GAS = 1999999987;
 const CRON_JOB_INTERVAL_IN_MS = 800;
 let pricePerNft = 0;
